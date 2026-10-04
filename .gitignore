@@ -1,0 +1,12 @@
+**/bin/
+**/obj/
+**/.vs/
+**/*.user
+**/Properties/launchSettings.json
+**/appsettings.json
+**/appsettings.*.json
+!**/appsettings.Development.json
+.env
+.env.*
+!.env.example
+secrets.json
