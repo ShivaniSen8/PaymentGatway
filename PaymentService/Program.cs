@@ -7,13 +7,30 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddDbContext<PaymentDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("PaymentDb")));
+{
+    if (builder.Environment.IsDevelopment() &&
+        builder.Configuration.GetValue<bool>("Database:UseInMemory"))
+    {
+        options.UseInMemoryDatabase("PaymentDb");
+    }
+    else
+    {
+        options.UseSqlServer(
+            builder.Configuration.GetConnectionString("PaymentDb"));
+    }
+});
 
 builder.Services.AddScoped<IPaymentService, PaymentApplicationService>();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddHttpClient<IPaymentGateway, RazorpayPaymentGateway>(
-    client => client.BaseAddress = new Uri("https://api.razorpay.com/"));
+if (builder.Configuration.GetValue<bool>("PaymentGateway:UseMock"))
+{
+    builder.Services.AddScoped<IPaymentGateway, MockPaymentGateway>();
+}
+else
+{
+    builder.Services.AddHttpClient<IPaymentGateway, RazorpayPaymentGateway>(
+        client => client.BaseAddress = new Uri("https://api.razorpay.com/"));
+}
 builder.Services.AddHttpClient("OrderService", client =>
 {
     var orderServiceBaseUrl =
